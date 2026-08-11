@@ -1,0 +1,60 @@
+name: Build verified section 2.5 Korean translation
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - generate_2_5_docx.py
+      - .github/workflows/build-section-2-5.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Generate and verify DOCX and ZIP
+        run: python generate_2_5_docx.py
+
+      - name: Independent archive checks
+        run: |
+          python - <<'PY'
+          import zipfile
+          from pathlib import Path
+          docx = Path('generated/section_2_5_korean_translation.docx')
+          delivery = Path('generated/section_2_5_korean_translation.zip')
+          assert docx.is_file() and docx.stat().st_size > 1000
+          assert delivery.is_file() and delivery.stat().st_size > 1000
+          with zipfile.ZipFile(docx) as zf:
+              assert zf.testzip() is None
+              assert 'word/document.xml' in zf.namelist()
+              assert 'word/footnotes.xml' in zf.namelist()
+          with zipfile.ZipFile(delivery) as zf:
+              assert zf.testzip() is None
+              assert 'section_2_5_korean_translation.docx' in zf.namelist()
+              assert 'section_2_5_verification.txt' in zf.namelist()
+          print('INDEPENDENT_ARCHIVE_CHECK=PASS')
+          PY
+
+      - name: Commit generated deliverables
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add generated/section_2_5_korean_translation.docx generated/section_2_5_korean_translation.zip generated/section_2_5_verification.txt
+          if git diff --cached --quiet; then
+            echo "No generated-file changes to commit."
+          else
+            git commit -m "Generate verified section 2.5 Korean translation"
+            git push
+          fi
