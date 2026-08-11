@@ -1,0 +1,39 @@
+name: Package section 2.2 as directly downloadable DOCX
+
+on:
+  push:
+    paths:
+      - '.github/workflows/package-section-2-2-direct-docx.yml'
+
+permissions:
+  contents: read
+
+env:
+  LANG: C.UTF-8
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Expand validated DOCX package
+        shell: bash
+        run: |
+          rm -rf docx-package
+          mkdir -p docx-package
+          unzip -q '第二章_2.2_韩语忠实翻译稿.docx' -d docx-package
+          test -f 'docx-package/[Content_Types].xml'
+          test -f 'docx-package/word/document.xml'
+          test -f 'docx-package/word/footnotes.xml'
+
+      - name: Upload package entries as DOCX-compatible ZIP
+        uses: actions/upload-artifact@v4
+        with:
+          name: section-2-2-direct-docx
+          path: docx-package/
+          if-no-files-found: error
+          include-hidden-files: true
+          compression-level: 6
+          retention-days: 7
