@@ -1,0 +1,45 @@
+name: Publish Korean Thesis Section 2.3 DOCX
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'docx_build_2_3/**'
+      - '.github/workflows/publish_2_3_docx.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  publish-docx:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Generate and validate DOCX
+        run: python docx_build_2_3/generate_2_3_docx.py
+
+      - name: Publish generated DOCX to repository
+        shell: bash
+        run: |
+          mkdir -p generated
+          cp 'output/第二章_2.3_韩语忠实翻译稿.docx' 'generated/第二章_2.3_韩语忠实翻译稿.docx'
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add 'generated/第二章_2.3_韩语忠实翻译稿.docx'
+          if git diff --cached --quiet; then
+            echo 'No changes to commit.'
+          else
+            git commit -m 'Publish Korean thesis section 2.3 DOCX'
+            git push
+          fi
