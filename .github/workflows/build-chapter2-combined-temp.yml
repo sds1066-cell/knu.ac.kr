@@ -1,0 +1,41 @@
+name: Build exact Chapter 2 integrated Korean DOCX
+
+on:
+  push:
+    branches:
+      - tmp-ch2-merge-20260812
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Build and verify integrated DOCX
+        run: |
+          set -euo pipefail
+          python tmp_merge_ch2/build_chapter2_combined.py
+          unzip -t delivery_ch2/Chapter2_Sections_2_1_to_2_5_Korean_Integrated.docx
+          cat delivery_ch2/Chapter2_Sections_2_1_to_2_5_Verification.txt
+          ls -la delivery_ch2
+
+      - name: Upload verified delivery artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Chapter2_Sections_2_1_to_2_5_Korean_Integrated
+          path: |
+            delivery_ch2/Chapter2_Sections_2_1_to_2_5_Korean_Integrated.docx
+            delivery_ch2/Chapter2_Sections_2_1_to_2_5_Verification.txt
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 7
