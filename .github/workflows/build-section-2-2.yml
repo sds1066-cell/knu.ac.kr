@@ -1,0 +1,72 @@
+name: Build thesis section 2.2 Korean DOCX
+
+on:
+  push:
+    paths:
+      - '.github/workflows/build-section-2-2.yml'
+
+permissions:
+  contents: write
+
+env:
+  PYTHONUTF8: '1'
+  LANG: C.UTF-8
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Apply final Korean-language and metadata corrections
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('generate_2_2_docx.py')
+          s = p.read_text(encoding='utf-8')
+          replacements = {
+              '반드시 정지 상태로 유지되어야 하는 공간으로 이해하지 않았다.': '반드시 정지 상태로 유지해야 하는 공간으로 보지 않았다.',
+              '상태를 더욱 변경하기 어렵게 만든다.': '상태를 더욱 조정하기 어렵게 만든다.',
+              '영구성을 중요하지만 배타적이지 않은 요소로 보며': '영구성을 중요하지만 배타적이지는 않은 요소로 보며',
+              '중재재판소는 또한 당시 협상,': '중재재판소는 또한 당시에는 협상,',
+              '가나에 분쟁수역에서 더 이상의 새로운 굴착이': '가나가 분쟁수역에서 더 이상의 새로운 굴착이',
+              '<dc:creator>OpenAI</dc:creator><cp:lastModifiedBy>OpenAI</cp:lastModifiedBy>': '<dc:creator></dc:creator><cp:lastModifiedBy></cp:lastModifiedBy>',
+          }
+          for old, new in replacements.items():
+              if old not in s:
+                  raise SystemExit(f'Missing expected text for replacement: {old}')
+              s = s.replace(old, new)
+          p.write_text(s, encoding='utf-8')
+          PY
+
+      - name: Generate DOCX
+        run: python3 generate_2_2_docx.py
+
+      - name: Validate DOCX package
+        shell: bash
+        run: |
+          unzip -t '第二章_2.2_韩语忠实翻译稿.docx'
+          cat verification.txt
+
+      - name: Upload generated file
+        uses: actions/upload-artifact@v4
+        with:
+          name: section-2-2-korean-docx
+          path: |
+            第二章_2.2_韩语忠实翻译稿.docx
+            verification.txt
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Commit generated DOCX
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add '第二章_2.2_韩语忠实翻译稿.docx' verification.txt
+          if ! git diff --cached --quiet; then
+            git commit -m 'Generate Korean translation of thesis section 2.2'
+            git push
+          fi
