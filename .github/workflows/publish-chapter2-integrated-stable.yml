@@ -1,0 +1,48 @@
+name: Publish stable integrated Chapter 2 files
+
+on:
+  push:
+    branches:
+      - published-ch2-integrated-20260812
+    paths:
+      - .github/workflows/publish-chapter2-integrated-stable.yml
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out publication branch
+        uses: actions/checkout@v4
+        with:
+          ref: published-ch2-integrated-20260812
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Build and verify exact integrated document
+        shell: bash
+        run: |
+          set -euo pipefail
+          PYTHONPATH="$GITHUB_WORKSPACE" python tmp_merge_ch2/build_chapter2_combined.py
+          unzip -t delivery_ch2/Chapter2_Sections_2_1_to_2_5_Korean_Integrated.docx
+          cat delivery_ch2/Chapter2_Sections_2_1_to_2_5_Verification.txt
+
+      - name: Commit stable downloadable DOCX and ZIP
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p published
+          cp delivery_ch2/Chapter2_Sections_2_1_to_2_5_Korean_Integrated.docx published/chapter2_2_1_to_2_5_korean_integrated.docx
+          cp delivery_ch2/Chapter2_Sections_2_1_to_2_5_Verification.txt published/chapter2_2_1_to_2_5_verification.txt
+          (cd published && zip -j -0 chapter2_2_1_to_2_5_korean_integrated.zip chapter2_2_1_to_2_5_korean_integrated.docx chapter2_2_1_to_2_5_verification.txt)
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add published/
+          git commit -m "Publish verified integrated Chapter 2 files"
+          git push origin HEAD:published-ch2-integrated-20260812
