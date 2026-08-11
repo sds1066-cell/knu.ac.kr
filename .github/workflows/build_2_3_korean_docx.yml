@@ -1,0 +1,36 @@
+name: Build Korean Thesis Section 2.3 DOCX
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'docx_build_2_3/**'
+      - '.github/workflows/build_2_3_korean_docx.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-docx:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Generate and validate DOCX
+        run: python docx_build_2_3/generate_2_3_docx.py
+
+      - name: Upload DOCX artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: section-2-3-korean-docx
+          path: output/第二章_2.3_韩语忠实翻译稿.docx
+          if-no-files-found: error
+          retention-days: 7
