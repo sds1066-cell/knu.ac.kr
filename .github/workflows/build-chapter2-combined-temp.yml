@@ -24,7 +24,7 @@ jobs:
       - name: Build and verify integrated DOCX
         run: |
           set -euo pipefail
-          python tmp_merge_ch2/build_chapter2_combined.py
+          PYTHONPATH="$GITHUB_WORKSPACE" python tmp_merge_ch2/build_chapter2_combined.py
           unzip -t delivery_ch2/Chapter2_Sections_2_1_to_2_5_Korean_Integrated.docx
           cat delivery_ch2/Chapter2_Sections_2_1_to_2_5_Verification.txt
           ls -la delivery_ch2
