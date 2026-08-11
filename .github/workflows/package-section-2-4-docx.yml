@@ -1,0 +1,26 @@
+name: Package Section 2.4 as DOCX
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/package-section-2-4-docx.yml'
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Expand the OOXML package
+        run: |
+          mkdir -p docx_contents
+          unzip -q 'downloads/第二章_2.4_韩语忠实翻译稿.docx' -d docx_contents
+      - name: Upload DOCX package contents
+        uses: actions/upload-artifact@v4
+        with:
+          name: 第二章_2.4_韩语忠实翻译稿_可直接打开
+          path: docx_contents
+          if-no-files-found: error
+          include-hidden-files: true
+          retention-days: 1
