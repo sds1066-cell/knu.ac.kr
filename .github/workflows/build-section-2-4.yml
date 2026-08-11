@@ -1,0 +1,42 @@
+name: Build Korean Thesis Section 2.4 DOCX
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'generate_2_4_docx.py'
+      - '.github/workflows/build-section-2-4.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-docx:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Generate and validate DOCX
+        run: python generate_2_4_docx.py
+
+      - name: Confirm generated package
+        run: |
+          test -s '第二章_2.4_韩语忠实翻译稿.docx'
+          unzip -t '第二章_2.4_韩语忠实翻译稿.docx'
+          cat verification_2_4.txt
+
+      - name: Upload DOCX artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: section-2-4-korean-docx
+          path: 第二章_2.4_韩语忠实翻译稿.docx
+          if-no-files-found: error
+          retention-days: 7
