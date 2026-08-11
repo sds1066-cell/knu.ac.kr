@@ -57,11 +57,14 @@ jobs:
           print('INDEPENDENT_ARCHIVE_CHECK=PASS')
           PY
 
-      - name: Upload verified ZIP artifact
+      - name: Upload verified deliverables as one ZIP artifact
         uses: actions/upload-artifact@v4
         with:
-          name: section-2-5-korean-translation
-          path: generated/section_2_5_korean_translation.zip
+          name: section-2-5-korean-translation-final
+          path: |
+            generated/section_2_5_korean_translation.docx
+            generated/section_2_5_verification.txt
+            generated/section_2_5_delivery_manifest.txt
           if-no-files-found: error
           retention-days: 30
           compression-level: 0
