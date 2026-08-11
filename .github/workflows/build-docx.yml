@@ -40,10 +40,29 @@ jobs:
             git push
           fi
 
-      - name: Upload Word document
+      - name: Upload ordinary artifact
         uses: actions/upload-artifact@v4
         with:
           name: korean-section-2-2
           path: output/第二章_2.2_韩语忠实翻译稿_重新输出.docx
           if-no-files-found: error
+          retention-days: 1
+
+      - name: Prepare OOXML package root
+        run: |
+          rm -rf docx_package
+          mkdir -p docx_package
+          unzip -q output/第二章_2.2_韩语忠实翻译稿_重新输出.docx -d docx_package
+          test -f 'docx_package/[Content_Types].xml'
+          test -f docx_package/word/document.xml
+          test -f docx_package/word/footnotes.xml
+          test -f docx_package/word/_rels/document.xml.rels
+
+      - name: Upload package-root artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: korean-section-2-2-direct-docx
+          path: docx_package/
+          if-no-files-found: error
+          include-hidden-files: true
           retention-days: 1
