@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - generate_2_5_docx.py
+      - finalize_2_5_delivery.py
       - .github/workflows/build-section-2-5.yml
   workflow_dispatch:
 
@@ -24,8 +25,11 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Generate and verify DOCX and ZIP
+      - name: Generate DOCX source package
         run: python generate_2_5_docx.py
+
+      - name: Finalize package and independent manifest
+        run: python finalize_2_5_delivery.py
 
       - name: Independent archive checks
         run: |
@@ -34,16 +38,22 @@ jobs:
           from pathlib import Path
           docx = Path('generated/section_2_5_korean_translation.docx')
           delivery = Path('generated/section_2_5_korean_translation.zip')
-          assert docx.is_file() and docx.stat().st_size > 1000
-          assert delivery.is_file() and delivery.stat().st_size > 1000
+          verification = Path('generated/section_2_5_verification.txt')
+          manifest = Path('generated/section_2_5_delivery_manifest.txt')
+          for path in (docx, delivery, verification, manifest):
+              assert path.is_file() and path.stat().st_size > 100
           with zipfile.ZipFile(docx) as zf:
               assert zf.testzip() is None
               assert 'word/document.xml' in zf.namelist()
               assert 'word/footnotes.xml' in zf.namelist()
           with zipfile.ZipFile(delivery) as zf:
               assert zf.testzip() is None
-              assert 'section_2_5_korean_translation.docx' in zf.namelist()
-              assert 'section_2_5_verification.txt' in zf.namelist()
+              assert set(zf.namelist()) == {
+                  'section_2_5_korean_translation.docx',
+                  'section_2_5_verification.txt',
+              }
+          assert 'RESULT=PASS' in verification.read_text(encoding='utf-8')
+          assert 'DELIVERY_RESULT=PASS' in manifest.read_text(encoding='utf-8')
           print('INDEPENDENT_ARCHIVE_CHECK=PASS')
           PY
 
@@ -51,10 +61,14 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add generated/section_2_5_korean_translation.docx generated/section_2_5_korean_translation.zip generated/section_2_5_verification.txt
+          git add \
+            generated/section_2_5_korean_translation.docx \
+            generated/section_2_5_korean_translation.zip \
+            generated/section_2_5_verification.txt \
+            generated/section_2_5_delivery_manifest.txt
           if git diff --cached --quiet; then
             echo "No generated-file changes to commit."
           else
-            git commit -m "Generate verified section 2.5 Korean translation"
+            git commit -m "Finalize verified section 2.5 Korean translation delivery"
             git push
           fi
